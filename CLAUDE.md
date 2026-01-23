@@ -31,9 +31,13 @@ examcanada/
 │   │   │   └── page.tsx          # Quiz page
 │   │   └── results/
 │   │       └── page.tsx          # Results page
-│   └── category/
-│       └── [category]/
-│           └── page.tsx          # Category listing page
+│   ├── category/
+│   │   └── [category]/
+│   │       └── page.tsx          # Category listing page
+│   └── flashcards/
+│       ├── page.tsx              # Flashcard decks listing
+│       └── [deck]/
+│           └── page.tsx          # Flashcard study page
 │
 ├── components/
 │   ├── AdUnit.tsx                # Google AdSense component
@@ -44,7 +48,10 @@ examcanada/
 │   ├── ReviewAnswers.tsx         # Expandable answers review
 │   ├── ShareButtons.tsx          # Social sharing buttons
 │   ├── Header.tsx                # Site header/nav
-│   └── Footer.tsx                # Site footer
+│   ├── Footer.tsx                # Site footer
+│   ├── FlashcardView.tsx         # Single flashcard with flip animation
+│   ├── FlashcardDeckCard.tsx     # Flashcard deck preview card
+│   └── FlashcardStudy.tsx        # Flashcard study interface
 │
 ├── lib/
 │   ├── firebase.ts               # Firebase initialization
@@ -91,6 +98,8 @@ npm run lint
 | `/icbc/test` | `app/[exam]/test/page.tsx` | Quiz interface |
 | `/icbc/results` | `app/[exam]/results/page.tsx` | Results display |
 | `/category/driving` | `app/category/[category]/page.tsx` | Category listing |
+| `/flashcards` | `app/flashcards/page.tsx` | Flashcard decks listing |
+| `/flashcards/icbc-road-signs` | `app/flashcards/[deck]/page.tsx` | Flashcard study interface |
 
 ## Firestore Data Schema
 
@@ -138,6 +147,35 @@ npm run lint
 | `icon` | string | Emoji icon |
 | `order` | number | Display order |
 
+### Collection: `flashcardDecks`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `slug` | string | URL slug (icbc-road-signs, g1-rules) |
+| `examId` | string \| null | Reference to related exam (optional) |
+| `title` | string | Display title |
+| `description` | string | Deck description |
+| `cardCount` | number | Total cards in deck |
+| `category` | string | driving \| citizenship \| food \| professional |
+| `province` | string \| null | BC, ON, AB, or null for national |
+| `icon` | string | Emoji icon for display |
+| `isActive` | boolean | Whether deck is published |
+| `createdAt` | timestamp | Creation timestamp |
+
+### Collection: `flashcards`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `deckId` | string | Reference to flashcard deck ID |
+| `front` | string | Front side text (question/term) |
+| `back` | string | Back side text (answer/definition) |
+| `imageUrl` | string \| null | Optional image URL |
+| `hint` | string \| null | Optional hint text |
+| `topic` | string | Topic category for grouping |
+| `difficulty` | string | easy \| medium \| hard |
+| `isPremium` | boolean | Reserved for future premium tier |
+| `createdAt` | timestamp | Creation timestamp |
+
 ## TypeScript Types
 
 All types are defined in `lib/types.ts`:
@@ -147,6 +185,10 @@ All types are defined in `lib/types.ts`:
 - `Category` - Category document structure
 - `QuizState` - React state for quiz progress
 - `QuizResult` - Calculated quiz results
+- `Flashcard` - Flashcard document structure
+- `FlashcardDeck` - Flashcard deck document structure
+- `FlashcardStudyState` - React state for flashcard study session
+- `FlashcardStudyResult` - Calculated flashcard study results
 
 ## Key Development Patterns
 
@@ -198,6 +240,31 @@ Keep data fetching in Server Components when possible:
 - Exam landing pages
 - Category pages
 - Home page
+- Flashcard deck listing
+
+### 6. Flashcard Study State Management
+
+Flashcard study state is managed client-side similar to quizzes:
+
+```typescript
+interface FlashcardStudyState {
+  cards: Flashcard[];
+  currentIndex: number;
+  isFlipped: boolean;
+  knownCards: Set<string>;    // cardIds user marked as known
+  unknownCards: Set<string>;  // cardIds user marked as still learning
+  isComplete: boolean;
+}
+```
+
+### 7. Flashcard Data Fetching
+
+```typescript
+import { getFlashcardDeckBySlug, getFlashcardsByDeckId } from '@/lib/firestore';
+
+const deck = await getFlashcardDeckBySlug('icbc-road-signs');
+const cards = await getFlashcardsByDeckId(deck.id);
+```
 
 ## Environment Variables
 
@@ -300,7 +367,9 @@ Before deploying changes:
 - [ ] `npm run build` completes without errors
 - [ ] `npm run lint` passes
 - [ ] Quiz flow works end-to-end (start → answer → submit → results)
+- [ ] Flashcard flow works end-to-end (flip → mark known/unknown → completion)
 - [ ] Mobile responsive design works
+- [ ] Flashcard flip animation works on mobile
 - [ ] Ad units load correctly (test with AdSense test mode)
 - [ ] Firestore queries return expected data
 
@@ -336,6 +405,44 @@ Questions can be added via:
   "topic": "road-signs",
   "difficulty": "easy",
   "isPremium": false
+}
+```
+
+### Adding a New Flashcard Deck
+
+1. Add deck document to Firestore `flashcardDecks` collection
+2. Add flashcards to `flashcards` collection with matching `deckId`
+3. Verify deck appears on `/flashcards` page
+4. Test complete study flow (flip, mark known/unknown, completion)
+
+### Flashcard JSON Format
+
+```json
+{
+  "deckId": "deck123",
+  "front": "What does a STOP sign mean?",
+  "back": "Come to a complete stop, yield to traffic and pedestrians, then proceed when safe.",
+  "imageUrl": null,
+  "hint": "This is a red octagonal sign",
+  "topic": "regulatory-signs",
+  "difficulty": "easy",
+  "isPremium": false
+}
+```
+
+### Flashcard Deck JSON Format
+
+```json
+{
+  "slug": "icbc-road-signs",
+  "examId": "exam123",
+  "title": "ICBC Road Signs",
+  "description": "Master all BC road signs with these flashcards.",
+  "cardCount": 50,
+  "category": "driving",
+  "province": "BC",
+  "icon": "🚸",
+  "isActive": true
 }
 ```
 

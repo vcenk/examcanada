@@ -34,6 +34,12 @@ export default function Header() {
             >
               Professional
             </Link>
+            <Link
+              href="/flashcards"
+              className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
+            >
+              Flashcards
+            </Link>
           </nav>
         </div>
       </div>

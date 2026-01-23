@@ -8,7 +8,7 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
-import type { Exam, Question, Category } from './types';
+import type { Exam, Question, Category, FlashcardDeck, Flashcard } from './types';
 
 // Get all active exams
 export async function getExams(): Promise<Exam[]> {
@@ -160,6 +160,126 @@ export function calculateResults(
     correctAnswers,
     percentage,
     passed: percentage >= passingScore,
+    weakTopics,
+  };
+}
+
+// ==================== Flashcard Queries ====================
+
+// Get all active flashcard decks
+export async function getFlashcardDecks(): Promise<FlashcardDeck[]> {
+  const q = query(
+    collection(db, 'flashcardDecks'),
+    where('isActive', '==', true)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+  })) as FlashcardDeck[];
+}
+
+// Get flashcard deck by slug
+export async function getFlashcardDeckBySlug(slug: string): Promise<FlashcardDeck | null> {
+  const q = query(
+    collection(db, 'flashcardDecks'),
+    where('slug', '==', slug),
+    where('isActive', '==', true)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  const docData = snapshot.docs[0];
+  return {
+    id: docData.id,
+    ...docData.data(),
+    createdAt: docData.data().createdAt?.toDate() || new Date(),
+  } as FlashcardDeck;
+}
+
+// Get flashcard decks by category
+export async function getFlashcardDecksByCategory(category: string): Promise<FlashcardDeck[]> {
+  const q = query(
+    collection(db, 'flashcardDecks'),
+    where('category', '==', category),
+    where('isActive', '==', true)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+  })) as FlashcardDeck[];
+}
+
+// Get flashcard decks by exam
+export async function getFlashcardDecksByExamId(examId: string): Promise<FlashcardDeck[]> {
+  const q = query(
+    collection(db, 'flashcardDecks'),
+    where('examId', '==', examId),
+    where('isActive', '==', true)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+  })) as FlashcardDeck[];
+}
+
+// Get flashcards for a deck (free only)
+export async function getFlashcardsByDeckId(deckId: string): Promise<Flashcard[]> {
+  const q = query(
+    collection(db, 'flashcards'),
+    where('deckId', '==', deckId),
+    where('isPremium', '==', false)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate() || new Date(),
+  })) as Flashcard[];
+}
+
+// Calculate flashcard study results
+export function calculateFlashcardResults(
+  cards: Flashcard[],
+  knownCards: Set<string>,
+  unknownCards: Set<string>
+): {
+  totalCards: number;
+  knownCount: number;
+  unknownCount: number;
+  percentageKnown: number;
+  weakTopics: string[];
+} {
+  const topicResults: Record<string, { known: number; total: number }> = {};
+
+  cards.forEach((card) => {
+    if (!topicResults[card.topic]) {
+      topicResults[card.topic] = { known: 0, total: 0 };
+    }
+    topicResults[card.topic].total++;
+    if (knownCards.has(card.id)) {
+      topicResults[card.topic].known++;
+    }
+  });
+
+  const knownCount = knownCards.size;
+  const unknownCount = unknownCards.size;
+  const percentageKnown = cards.length > 0 ? Math.round((knownCount / cards.length) * 100) : 0;
+
+  // Find weak topics (less than 60% known)
+  const weakTopics = Object.entries(topicResults)
+    .filter(([, stats]) => stats.total > 0 && stats.known / stats.total < 0.6)
+    .map(([topic]) => topic);
+
+  return {
+    totalCards: cards.length,
+    knownCount,
+    unknownCount,
+    percentageKnown,
     weakTopics,
   };
 }
