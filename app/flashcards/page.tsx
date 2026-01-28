@@ -149,14 +149,14 @@ export default async function FlashcardsPage() {
               <span className="text-4xl mb-3 block">✅</span>
               <h3 className="font-semibold text-gray-900 mb-2">Track Progress</h3>
               <p className="text-sm text-gray-600">
-                Mark cards as "Got It" or "Still Learning" to track your mastery.
+                Mark cards as &quot;Got It&quot; or &quot;Still Learning&quot; to track your mastery.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 text-center shadow-sm">
               <span className="text-4xl mb-3 block">🔄</span>
               <h3 className="font-semibold text-gray-900 mb-2">Review & Repeat</h3>
               <p className="text-sm text-gray-600">
-                Focus on cards you're still learning until you master them all.
+                Focus on cards you&apos;re still learning until you master them all.
               </p>
             </div>
           </div>
@@ -195,7 +195,7 @@ export default async function FlashcardsPage() {
           </p>
           <h3>Benefits of Our Flashcard System</h3>
           <ul>
-            <li><strong>Spaced repetition:</strong> Focus on cards you don't know yet</li>
+            <li><strong>Spaced repetition:</strong> Focus on cards you don&apos;t know yet</li>
             <li><strong>Visual learning:</strong> Road signs and images included where relevant</li>
             <li><strong>Mobile friendly:</strong> Study anywhere on any device</li>
             <li><strong>Progress tracking:</strong> See your mastery percentage after each session</li>
@@ -205,8 +205,8 @@ export default async function FlashcardsPage() {
           <ol>
             <li>Study in short sessions (15-20 minutes) for better retention</li>
             <li>Always try to recall the answer before flipping the card</li>
-            <li>Be honest with yourself—only mark "Got It" if you really knew it</li>
-            <li>Review cards you marked as "Still Learning" until you master them</li>
+            <li>Be honest with yourself—only mark &quot;Got It&quot; if you really knew it</li>
+            <li>Review cards you marked as &quot;Still Learning&quot; until you master them</li>
             <li>Combine flashcards with practice tests for best results</li>
           </ol>
         </div>
