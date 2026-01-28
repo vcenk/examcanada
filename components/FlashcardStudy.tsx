@@ -157,7 +157,7 @@ export default function FlashcardStudy({ deck, cards: initialCards }: FlashcardS
             Study Session Complete!
           </h2>
           <p className="text-gray-600 mb-6">
-            You've reviewed all {cards.length} cards in this deck.
+            You&apos;ve reviewed all {cards.length} cards in this deck.
           </p>
 
           {/* Stats */}
